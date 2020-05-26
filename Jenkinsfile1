@@ -1,0 +1,40 @@
+pipeline {
+    agent any
+    tools {
+        maven 'maven'
+    }
+    options {
+        buildDiscarder logRotator(daysToKeepStr: '5', numToKeepStr: '7')
+    }
+    stages{
+        stage('Build'){
+            steps{
+                 sh script: 'mvn clean package'
+                 archiveArtifacts artifacts: 'target/*.war', onlyIfSuccessful: true
+            }
+        }
+
+        stage('upload nexus'){
+            steps{
+               nexusArtifactUploader artifacts: [
+                 [
+                      artifactId: 'simple-app',
+                      classifier: '',
+                      file: 'target/simple-app-3.0.0-SNAPSHOT.war',
+                      type: 'war'
+               ]
+             ],
+               credentialsId: 'nexus',
+               groupId: 'in.javahome',
+               nexusUrl: '192.168.99.100:8081',
+               nexusVersion: 'nexus3',
+               protocol: 'http',
+               repository: 'http://192.168.99.100:8081/repository/CI_JOBS/',
+               version: '3.0.0-SNAPSHOT'
+   }
+   }
+   }
+   }
+   }
+
+
